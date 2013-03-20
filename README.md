@@ -74,7 +74,7 @@ will be used instead.
 This feature is currently only setup for files on disk, but could be adapted to
 using descriptions located on the web as well.
 
-Also supports fetching API definitions over HTTP using a 'remoteConfigURL' property. See 'IODocs/public/data/apiConfig.json.remote for an example.
+Also supports fetching API definitions over HTTP using a 'remoteConfigURL' property. See 'IODocs/public/data/apiConfig.json.remote' file for an example.
 
 PUT and POST content body
 =========================
