@@ -187,7 +187,8 @@ function oauth(req, res, next) {
             console.log('apiSecret: ' + apiSecret);
         };
 
-        // Check if the API even uses OAuth, then if the method requires oauth, then if the session is not authed
+        // Check if the API even uses OAuth, then if the method requires oauth,
+		// then if the session is not authed
         if (apiConfig.oauth.type == 'three-legged' && req.body.oauth == 'authrequired' && (!req.session[apiName] || !req.session[apiName].authed) ) {
             if (config.debug) {
                 console.log('req.session: ' + util.inspect(req.session));
@@ -203,7 +204,8 @@ function oauth(req, res, next) {
                 if (err) {
                     res.send("Error getting OAuth request token : " + util.inspect(err), 500);
                 } else {
-                    // Unique key using the sessionID and API name to store tokens and secrets
+                    // Unique key using the sessionID and API name to store
+					// tokens and secrets
                     var key = req.sessionID + ':' + apiName;
 
                     db.set(key + ':apiKey', apiKey, redis.print);
@@ -244,7 +246,9 @@ function oauthSuccess(req, res, next) {
         apiSecret,
         apiName = req.params.api,
         apiConfig = apisConfig[apiName],
-        key = req.sessionID + ':' + apiName; // Unique key using the sessionID and API name to store tokens and secrets
+        key = req.sessionID + ':' + apiName; // Unique key using the
+												// sessionID and API name to
+												// store tokens and secrets
 
     if (config.debug) {
         console.log('apiName: ' + apiName);
@@ -350,7 +354,8 @@ function processRequest(req, res, next) {
                 // URL params are prepended with ":"
                 var regx = new RegExp(':' + param);
 
-                // If the param is actually a part of the URL, put it in the URL and remove the param
+                // If the param is actually a part of the URL, put it in the URL
+				// and remove the param
                 if (!!regx.test(methodURL)) {
                     methodURL = methodURL.replace(regx, params[param]);
                     delete params[param]
@@ -520,7 +525,8 @@ function processRequest(req, res, next) {
             }
 
         } else {
-            // API uses OAuth, but this call doesn't require auth and the user isn't already authed, so just call it.
+            // API uses OAuth, but this call doesn't require auth and the user
+			// isn't already authed, so just call it.
             unsecuredCall();
         }
     } else {
@@ -614,7 +620,8 @@ function processRequest(req, res, next) {
 	    options.headers['Content-Type'] = contentType;
 	}
 
-        // API Call. response is the response from the API, res is the response we will send back to the user.
+        // API Call. response is the response from the API, res is the response
+		// we will send back to the user.
         var apiCall = doRequest(options, function(response) {
             response.setEncoding('utf-8');
 
@@ -681,7 +688,8 @@ var cachedApiInfo = [];
 // Passes variables to the view
 app.dynamicHelpers({
     session: function(req, res) {
-    // If api wasn't passed in as a parameter, check the path to see if it's there
+    // If api wasn't passed in as a parameter, check the path to see if it's
+	// there
         if (!req.params.api) {
             pathName = req.url.replace('/','');
             // Is it a valid API - if there's a config file we can assume so
@@ -691,7 +699,8 @@ app.dynamicHelpers({
                 }
             });
         }       
-        // If the cookie says we're authed for this particular API, set the session to authed as well
+        // If the cookie says we're authed for this particular API, set the
+		// session to authed as well
         if (req.params.api && req.session[req.params.api] && req.session[req.params.api]['authed']) {
             req.session['authed'] = true;
         }
@@ -712,7 +721,7 @@ app.dynamicHelpers({
     },
     apiDefinition: function(req, res) {
         if (req.params.api) {
-            var data = getData(req.params.api);
+            var data = getData(req.apiDef, req.params.api);
             processApiIncludes(data, req.params.api);
             return data;
         }
@@ -720,45 +729,38 @@ app.dynamicHelpers({
 });
 
 /*
-   Can be called in the following ways:
-        getData("klout");
-        getData("klout", "./klout/get-methods.json");
-        getData("klout", "/user/home/klout/klout.json");
-        getData("klout", "/user/home/random/nonsense.json");
-
-*/
-function getData(api, passedPath) {
+ * Can be called in the following ways: getData("klout"); getData("klout",
+ * "./klout/get-methods.json"); getData("klout", "/user/home/klout/klout.json");
+ * getData("klout", "/user/home/random/nonsense.json");
+ * 
+ */
+function getData(apiDef, api, passedPath) {
     var end = ".json";
     var loc;
     // Error checking
     if ( /[A-Za-z_\-\d]+/.test(api)) {
-        //console.log('Valid input for API name.');
+        // console.log('Valid input for API name.');
     }
     else {
         console.log('API name provided contains invalid characters.');        
     }
 
     /*
-       Check whether api-name given is in apiconfig.
-       Check whether api has 'href' property in config.
-       If so, check if 'href' property is of 'file' or 'htttp'.
-       If 'file', check that 'href' property contains a directory; print warning
-        if not a directory
-       Check if there was a second argument given (passedPath)
-       If passedPath, check whether it is a relative path (should start with './'
-        if it is).
-       Otherwise, check that the passedPath is of 'file' type and get the data
-        from it. Assuming a full path is being given.
-       If no passedPath, attempt to return the api-name.json file from the directory
-        given in the config file.
-       If no 'href' property in given config for given api name, but passedPath
-        exists with a relative directory, use default location and attempt to
-        return data.
-       If no 'href' property and no passedPath, attempt to get api-name.json from
-        default location (iodocs installation directory + '/public/data').
-       If given api name isn't found in the config file, print statement stating
-        as much.
-    */
+	 * Check whether api-name given is in apiconfig. Check whether api has
+	 * 'href' property in config. If so, check if 'href' property is of 'file'
+	 * or 'htttp'. If 'file', check that 'href' property contains a directory;
+	 * print warning if not a directory Check if there was a second argument
+	 * given (passedPath) If passedPath, check whether it is a relative path
+	 * (should start with './' if it is). Otherwise, check that the passedPath
+	 * is of 'file' type and get the data from it. Assuming a full path is being
+	 * given. If no passedPath, attempt to return the api-name.json file from
+	 * the directory given in the config file. If no 'href' property in given
+	 * config for given api name, but passedPath exists with a relative
+	 * directory, use default location and attempt to return data. If no 'href'
+	 * property and no passedPath, attempt to get api-name.json from default
+	 * location (iodocs installation directory + '/public/data'). If given api
+	 * name isn't found in the config file, print statement stating as much.
+	 */
 
     if (apisConfig.hasOwnProperty(api)) {
         if (apisConfig[api].hasOwnProperty('href')) {
@@ -779,6 +781,8 @@ function getData(api, passedPath) {
                 else {
                     return require(pathy.join(loc.path + api + end));
                 }
+            } else if (loc.protocol.match(/^http/)) {
+                return apiDef
             }
         }
         else if (/^.\//.test(passedPath)) {
@@ -795,21 +799,23 @@ function getData(api, passedPath) {
 
 // This function was developed with the assumption that the starting input
 // would be the main api file, which would look like the following:
-//    { "endpoints":
-//        [...]
-//    }
+// { "endpoints":
+// [...]
+// }
 //
 // The include statement syntax looks like this:
-//    {
-//        "external":
-//        {
-//            "href": "./public/data/desired/data.json",
-//            "type": "list"
-//        }
-//    }
-// "type": "list" is used only when the contents of the file to be included is a list object 
-// that will be merged into an existing list. 
-// An example would be storing all the get methods for an endpoint as a list of objects in 
+// {
+// "external":
+// {
+// "href": "./public/data/desired/data.json",
+// "type": "list"
+// }
+// }
+// "type": "list" is used only when the contents of the file to be included is a
+// list object
+// that will be merged into an existing list.
+// An example would be storing all the get methods for an endpoint as a list of
+// objects in
 // an external file.
 function processApiIncludes (jsonData, apiName) {
     // used to determine object types in a more readable manner
@@ -819,33 +825,43 @@ function processApiIncludes (jsonData, apiName) {
 
     if (typeof jsonData === "object") {
         for (var key in jsonData) {
-            // If an object's property contains an array, go through the objects in the array
-            //  Endpoints and Methods are examples of this
-            //  Endpoints contains a list of javascript objects, which are easily split into individual files.
-            //      Each endpoint is basically a 1 to 1 javascript object relationship
-            //  Methods aren't quite as nice.
-            //      It could be convenient to split methods into get/put/post/delete externals.
-            //      This then creates a 1 to many javascript object relationship
+            // If an object's property contains an array, go through the objects
+			// in the array
+            // Endpoints and Methods are examples of this
+            // Endpoints contains a list of javascript objects, which are easily
+			// split into individual files.
+            // Each endpoint is basically a 1 to 1 javascript object
+			// relationship
+            // Methods aren't quite as nice.
+            // It could be convenient to split methods into get/put/post/delete
+			// externals.
+            // This then creates a 1 to many javascript object relationship
             if (what.call(jsonData[key]) === '[object Array]') {
                 var i = jsonData[key].length;
 
-                // Iterating through the array in reverse so that if an element needs to be replaced
-                // by multiple elements, the array index does not need to be updated. 
+                // Iterating through the array in reverse so that if an element
+				// needs to be replaced
+                // by multiple elements, the array index does not need to be
+				// updated.
                 while (i--) {
                     var arrayObj = jsonData[key][i];
                     if ( includeKeyword in arrayObj ) {
-                        var tempArray = getData(apiName, arrayObj[includeKeyword][includeLocation]);
-                        // 1 include request to be replaced by multiple objects (methods)
+                        var tempArray = getData(null, apiName, arrayObj[includeKeyword][includeLocation]);
+                        // 1 include request to be replaced by multiple objects
+						// (methods)
                         if (arrayObj[includeKeyword]['type'] == 'list') {
 
-                            // recurse here to replace values of properties that may need replacing
+                            // recurse here to replace values of properties that
+							// may need replacing
                             processApiIncludes(tempArray, apiName);
                             // why isn't this jsonData[key][i]?
-                            //  Because the array itself is being replaced with an updated version
+                            // Because the array itself is being replaced with
+							// an updated version
                             jsonData[key] = mergeExternal(i, jsonData[key], tempArray);
 
                         }
-                        // 1 include request to be replaced by 1 object (endpoint)
+                        // 1 include request to be replaced by 1 object
+						// (endpoint)
                         else {
                             jsonData[key][i] = tempArray;
                             processApiIncludes(jsonData[key][i], apiName);
@@ -854,12 +870,13 @@ function processApiIncludes (jsonData, apiName) {
                 }
             }
 
-            // If an object's property contains an include statement, this will handle it.
+            // If an object's property contains an include statement, this will
+			// handle it.
             if (what.call(jsonData[key]) === '[object Object]') {
                 for (var property in jsonData[key]) {
                     if (what.call(jsonData[key][property]) === '[object Object]') {
                         if (includeKeyword in jsonData[key][property]) {
-                            jsonData[key][property] = getData(apiName, jsonData[key][property][includeKeyword][includeLocation]);
+                            jsonData[key][property] = getData(null, apiName, jsonData[key][property][includeKeyword][includeLocation]);
                             processApiIncludes(jsonData[key][property], apiName);
                         }
                     }
@@ -869,7 +886,7 @@ function processApiIncludes (jsonData, apiName) {
     }
 }
 
-// Takes the array position of an element in array1, removes that element, 
+// Takes the array position of an element in array1, removes that element,
 // and in its place, the contents of array2 are merged in.
 function mergeExternal (arrayPos, array1, array2) {
     var a1_tail = array1.splice(arrayPos, array1.length);
@@ -886,12 +903,15 @@ function search (jsonData, searchTerm) {
         return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     };
 
-    // If ' OR ' is present in the search string, the search term will be split on ' OR ',
-    // and the first two parts will be used. These two parts will have spaces 
-    // stripped from them and then the regex term will present results that contain
+    // If ' OR ' is present in the search string, the search term will be split
+	// on ' OR ',
+    // and the first two parts will be used. These two parts will have spaces
+    // stripped from them and then the regex term will present results that
+	// contain
     // matches that have either term.
     //
-    // If ' OR ' is not present, the given term will be searched for, spaces will not be 
+    // If ' OR ' is not present, the given term will be searched for, spaces
+	// will not be
     // removed from the given term in this case.
     var regex;
     if (/\s+OR\s+/.test(searchTerm)) {
@@ -923,7 +943,8 @@ function search (jsonData, searchTerm) {
 }
 
 // Method searching function
-// Recursively check properties of a method object for a match to the given search term.
+// Recursively check properties of a method object for a match to the given
+// search term.
 function filterSearchObject (randomThing, regex) {
     var what = Object.prototype.toString;
     if (what.call(randomThing) === '[object Array]') {
@@ -966,12 +987,16 @@ app.get('/', function(req, res) {
 //
 // Search function
 //
-// Note: If a change is made to app.js, the node process restarted, and the search 
-// function  is used immediately without restart, there will be an error coming from the 
-// search() function regarding the use of '.length'. Refresh the page, and the error 
-// will go away. A page refresh is necessary to create a cached version of the api 
+// Note: If a change is made to app.js, the node process restarted, and the
+// search
+// function is used immediately without restart, there will be an error coming
+// from the
+// search() function regarding the use of '.length'. Refresh the page, and the
+// error
+// will go away. A page refresh is necessary to create a cached version of the
+// api
 // which this route uses.
-//  Not sure what the fix for this is.
+// Not sure what the fix for this is.
 app.get('/search', function(req, res) {
     var searchTerm = decodeURIComponent(req.query.term);
     res.send( search(cachedApiInfo, searchTerm) );
@@ -992,7 +1017,8 @@ app.post('/processReq', oauth, processRequest, function(req, res) {
 // Just auth
 app.all('/auth', oauth);
 
-// OAuth callback page, closes the window immediately after storing access token/secret
+// OAuth callback page, closes the window immediately after storing access
+// token/secret
 app.get('/authSuccess/:api', oauthSuccess, function(req, res) {
     res.render('authSuccess', {
         title: 'OAuth Successful'
@@ -1005,7 +1031,7 @@ app.post('/upload', function(req, res) {
 });
 
 // API shortname, all lowercase
-app.get('/:api([^\.]+)', function(req, res) {
+app.get('/:api([^\.]+)', getApiDefinition, function(req, res) {
     req.params.api=req.params.api.replace(/\/$/,'');
     res.render('api');
 });
@@ -1018,4 +1044,36 @@ if (!module.parent) {
     l.on('listening', function(err) {
         console.log("Express server listening on port %d", app.address().port);
     });
+}
+
+function getApiDefinition(req, res, next) {
+    if (req.params.api && apisConfig[req.params.api].remoteConfigURL) {
+    	apiConfig = apisConfig[req.params.api];
+    	apiDef = '';
+
+        apiHostInfo = apiConfig.baseURL.split(':');
+        apiConfigUrl = apiHostInfo[0],
+        apiConfigPort = (apiHostInfo.length > 1) ? apiHostInfo[1] : "";
+
+        var opt = {
+            host: apiConfigUrl,
+            path: apiConfig.remoteConfigURL,
+            port: apiConfigPort
+        };
+
+	    http.request(opt).on('response', function(response) {
+	        var data = '';
+	        response.on('data', function(chunk) {
+	            data += chunk;
+	        });
+	        response.on('end', function() {
+	            apiDef = JSON.parse(data);
+	            req.apiDef = apiDef;
+	            next();
+	        });
+	    }).end();
+	  }
+	  else {
+	    next();
+	  }
 }

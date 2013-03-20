@@ -1,0 +1,10 @@
+{
+    "exampleservice": {
+        "name": "Example Service",
+        "protocol": "http",
+        "baseURL": "api.example.com",
+        "publicPath": "/v1",
+	"href": "http://api.example.com/v1/apidef",
+        "remoteConfigURL": "/v1/apidef"
+    }
+}
