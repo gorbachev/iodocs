@@ -74,10 +74,7 @@ will be used instead.
 This feature is currently only setup for files on disk, but could be adapted to
 using descriptions located on the web as well.
 
-Future functionality:
-    { "href": "http://www.example.com/foo.json" }
-The function would return the parsed JSON data from foo.json, dealing
-with file retrieval from the web.
+Also supports fetching API definitions over HTTP using a 'remoteConfigURL' property. See 'IODocs/public/data/apiConfig.json.remote for an example.
 
 PUT and POST content body
 =========================
